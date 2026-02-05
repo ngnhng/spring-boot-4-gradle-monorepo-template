@@ -1,0 +1,57 @@
+// Defines "What" to build.
+// https://docs.gradle.org/9.3.1/kotlin-dsl/gradle/org.gradle.api.initialization/-settings/index.html
+
+// The object returned by rootProject is mutable (it has a setName method).
+// The Kotlin compiler actually translates it to this Java bytecode:
+//   getRootProject().setName("...");
+rootProject.name = "backend"
+
+pluginManagement {
+  repositories {
+    mavenCentral()
+    gradlePluginPortal()
+  }
+
+  includeBuild("backend/build-logic")
+}
+
+// https://docs.gradle.org/9.3.1/userguide/best_practices_dependencies.html#do_this_instead_2
+dependencyResolutionManagement {
+  // If this mode is set, any repository declared directly in a project, either directly or via a
+  // plugin, will trigger a build error.
+  // See:
+  // https://docs.gradle.org/9.3.1/kotlin-dsl/gradle/org.gradle.api.initialization.resolve/-repositories-mode/index.html
+  repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
+
+  val nexusUrl = System.getenv("NEXUS_URL") ?: "http://localhost:8082/repository/maven-releases/"
+  val nexusUsername = System.getenv("NEXUS_USERNAME") ?: "admin"
+  val nexusPassword = System.getenv("NEXUS_PASSWORD") ?: "admin"
+  val nexusAllowInsecure = (System.getenv("NEXUS_ALLOW_INSECURE") ?: "true").toBoolean()
+
+  repositories {
+    mavenCentral()
+    maven {
+      name = "Nexus"
+      url = uri(nexusUrl)
+      isAllowInsecureProtocol = nexusAllowInsecure
+      credentials {
+        username = nexusUsername
+        password = nexusPassword
+      }
+    }
+  }
+}
+
+// Adds the given projects to the build. Each path in the supplied list is treated as the path of a
+// project to add to the build.
+// Note that these path are not file paths, but instead specify the location of the new project in
+// the project hierarchy. As such, the supplied paths must use the ':' character as separator (and
+// NOT '/').
+// See:
+// https://docs.gradle.org/9.3.1/kotlin-dsl/gradle/org.gradle.api.initialization/-settings/include.html
+include(
+    ":backend:onboard-provider",
+    ":backend:onboard-lending",
+    ":backend:onboard-core",
+    ":backend:onboard-registration",
+)

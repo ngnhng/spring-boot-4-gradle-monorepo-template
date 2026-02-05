@@ -1,0 +1,100 @@
+# https://taskfile.dev
+
+version: "3"
+
+vars:
+  FRONTEND_DIR: "./frontend"
+  PNPM_CMD: '{{if eq OS "windows"}}pnpm.cmd{{else}}pnpm{{end}}'
+
+  MAIN_MODULE: backend:onboard-provider
+  BACKEND_IMAGE_NAME: onboard-backend
+  GRADLE_CMD: '{{if eq OS "windows"}}gradlew.bat{{else}}./gradlew{{end}}'
+
+tasks:
+  default:
+    desc: Lists available tasks
+    cmds:
+      - task --list
+
+  dev:
+    desc: "Start BOTH Backend and Frontend in parallel"
+    deps: [backend:dev, frontend:dev]
+
+  install:
+    desc: "Install dependencies for BOTH"
+    deps: [backend:deps, frontend:install]
+
+  backend:dev:
+    desc: "Run Spring Boot Backend (Dev Profile)"
+    cmds:
+      - '{{.GRADLE_CMD}} :{{.MAIN_MODULE}}:bootRun --args="--spring.profiles.active=dev"'
+
+  backend:run:
+    desc: "Run Spring Boot Backend (Default)"
+    cmds:
+      - "{{.GRADLE_CMD}} :{{.MAIN_MODULE}}:bootRun"
+
+  backend:test:
+    desc: "Run Backend Tests"
+    cmds:
+      - "{{.GRADLE_CMD}} test"
+
+  backend:format:
+    desc: "Auto-format all Java code and Build scripts"
+    cmds:
+      - '{{.GRADLE_CMD}} spotlessApply'
+
+  backend:check-format:
+    desc: "Verify code formatting (Fail if not formatted)"
+    cmds:
+      - '{{.GRADLE_CMD}} spotlessCheck'
+
+  backend:deps:
+    desc: "Refresh Gradle Dependencies"
+    cmds:
+      - "{{.GRADLE_CMD}} --refresh-dependencies"
+
+  backend:verify:
+    desc: "Full CI check: clean, build, and test everything"
+    cmds:
+      - "{{.GRADLE_CMD}} clean build"
+
+  backend:docker-build:
+    desc: "Build Backend Docker Image"
+    cmds:
+      - docker build -t {{.BACKEND_IMAGE_NAME}} -f Dockerfile .
+
+  backend:docker-run:
+    desc: "Run Backend Docker Container"
+    cmds:
+      - docker run -p 8080:8080 {{.BACKEND_IMAGE_NAME}}
+
+  frontend:dev:
+    desc: "Start Frontend Dev Server"
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - "{{.PNPM_CMD}} run dev"
+
+  frontend:build:
+    desc: "Build Frontend for Production"
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - "{{.PNPM_CMD}} run build"
+
+  frontend:install:
+    desc: "Install Node Modules"
+    dir: "{{.FRONTEND_DIR}}"
+    # Only run install if package.json is newer than node_modules
+    sources:
+      - package.json
+      - pnpm-lock.json
+    generates:
+      - node_modules/.modules.yaml
+    cmds:
+      - "{{.PNPM_CMD}} install"
+
+  frontend:test:
+    desc: "Run Frontend Tests"
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - "{{.PNPM_CMD}} run test"
