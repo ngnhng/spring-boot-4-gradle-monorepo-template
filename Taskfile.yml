@@ -39,6 +39,11 @@ tasks:
     cmds:
       - "{{.GRADLE_CMD}} test"
 
+  backend:check:
+    desc: "Run Backend quality checks (Spotless, Error Prone, SpotBugs, tests lifecycle)"
+    cmds:
+      - "{{.GRADLE_CMD}} check"
+
   backend:format:
     desc: "Auto-format all Java code and Build scripts"
     cmds:
@@ -58,6 +63,11 @@ tasks:
     desc: "Full CI check: clean, build, and test everything"
     cmds:
       - "{{.GRADLE_CMD}} clean build"
+
+  backend:spotbugs:
+    desc: "Run SpotBugs analysis for main and test classes"
+    cmds:
+      - "{{.GRADLE_CMD}} spotbugsMain spotbugsTest"
 
   backend:docker-build:
     desc: "Build Backend Docker Image"
