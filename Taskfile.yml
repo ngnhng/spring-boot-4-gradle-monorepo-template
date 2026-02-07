@@ -3,9 +3,6 @@
 version: "3"
 
 vars:
-  FRONTEND_DIR: "./frontend"
-  PNPM_CMD: '{{if eq OS "windows"}}pnpm.cmd{{else}}pnpm{{end}}'
-
   MAIN_MODULE: backend:onboard-provider
   BACKEND_IMAGE_NAME: onboard-backend
   GRADLE_CMD: '{{if eq OS "windows"}}gradlew.bat{{else}}./gradlew{{end}}'
@@ -16,95 +13,76 @@ tasks:
     cmds:
       - task --list
 
-  dev:
-    desc: "Start BOTH Backend and Frontend in parallel"
-    deps: [backend:dev, frontend:dev]
-
   install:
-    desc: "Install dependencies for BOTH"
-    deps: [backend:deps, frontend:install]
+    desc: "Install dependencies for all"
+    deps: [deps]
 
-  backend:dev:
+  dev:
     desc: "Run Spring Boot Backend (Dev Profile)"
     cmds:
-      - '{{.GRADLE_CMD}} :{{.MAIN_MODULE}}:bootRun --args="--spring.profiles.active=dev"'
+      - '{{.GRADLE_CMD}} --rerun-tasks :{{.MAIN_MODULE}}:bootRun --args="--spring.profiles.active=dev"'
 
-  backend:run:
+  run:
     desc: "Run Spring Boot Backend (Default)"
     cmds:
-      - "{{.GRADLE_CMD}} :{{.MAIN_MODULE}}:bootRun"
+      - "{{.GRADLE_CMD}} --rerun-tasks :{{.MAIN_MODULE}}:bootRun"
 
-  backend:test:
+  test:
     desc: "Run Backend Tests"
     cmds:
-      - "{{.GRADLE_CMD}} test"
+      - "{{.GRADLE_CMD}} --rerun-tasks test"
 
-  backend:check:
+  check:
     desc: "Run Backend quality checks (Spotless, Error Prone, SpotBugs, tests lifecycle)"
     cmds:
-      - "{{.GRADLE_CMD}} check"
+      - "{{.GRADLE_CMD}} --rerun-tasks check"
 
-  backend:format:
+  format:
     desc: "Auto-format all Java code and Build scripts"
     cmds:
-      - '{{.GRADLE_CMD}} spotlessApply'
+      - '{{.GRADLE_CMD}} --rerun-tasks spotlessApply'
 
-  backend:check-format:
+  check-format:
     desc: "Verify code formatting (Fail if not formatted)"
     cmds:
-      - '{{.GRADLE_CMD}} spotlessCheck'
+      - '{{.GRADLE_CMD}} --rerun-tasks spotlessCheck'
 
-  backend:deps:
+  deps:
     desc: "Refresh Gradle Dependencies"
     cmds:
-      - "{{.GRADLE_CMD}} --refresh-dependencies"
+      - "{{.GRADLE_CMD}} --rerun-tasks --refresh-dependencies"
 
-  backend:verify:
+  verify:
     desc: "Full CI check: clean, build, and test everything"
     cmds:
-      - "{{.GRADLE_CMD}} clean build"
+      - "{{.GRADLE_CMD}} --rerun-tasks clean build"
 
-  backend:spotbugs:
+  spotbugs:
     desc: "Run SpotBugs analysis for main and test classes"
     cmds:
-      - "{{.GRADLE_CMD}} spotbugsMain spotbugsTest"
+      - "{{.GRADLE_CMD}} --rerun-tasks spotbugsMain spotbugsTest"
 
-  backend:docker-build:
+  checkstyle:
+    desc: "Run Checkstyle for main and test sources"
+    cmds:
+      - "{{.GRADLE_CMD}} --rerun-tasks checkstyleMain checkstyleTest"
+
+  checkstyle-main:
+    desc: "Run Checkstyle for main sources"
+    cmds:
+      - "{{.GRADLE_CMD}} --rerun-tasks checkstyleMain"
+
+  checkstyle-test:
+    desc: "Run Checkstyle for test sources"
+    cmds:
+      - "{{.GRADLE_CMD}} --rerun-tasks checkstyleTest"
+
+  docker-build:
     desc: "Build Backend Docker Image"
     cmds:
       - docker build -t {{.BACKEND_IMAGE_NAME}} -f Dockerfile .
 
-  backend:docker-run:
+  docker-run:
     desc: "Run Backend Docker Container"
     cmds:
       - docker run -p 8080:8080 {{.BACKEND_IMAGE_NAME}}
-
-  frontend:dev:
-    desc: "Start Frontend Dev Server"
-    dir: "{{.FRONTEND_DIR}}"
-    cmds:
-      - "{{.PNPM_CMD}} run dev"
-
-  frontend:build:
-    desc: "Build Frontend for Production"
-    dir: "{{.FRONTEND_DIR}}"
-    cmds:
-      - "{{.PNPM_CMD}} run build"
-
-  frontend:install:
-    desc: "Install Node Modules"
-    dir: "{{.FRONTEND_DIR}}"
-    # Only run install if package.json is newer than node_modules
-    sources:
-      - package.json
-      - pnpm-lock.json
-    generates:
-      - node_modules/.modules.yaml
-    cmds:
-      - "{{.PNPM_CMD}} install"
-
-  frontend:test:
-    desc: "Run Frontend Tests"
-    dir: "{{.FRONTEND_DIR}}"
-    cmds:
-      - "{{.PNPM_CMD}} run test"

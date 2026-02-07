@@ -1,4 +1,4 @@
-## Java Spring Multi-module Setup (Gradle Kotlin DSL + Maven)
+## Java Spring 4.x Gradle Multi-module Setup Template
 
 ### Multi-module project versus Single module project
 
@@ -7,12 +7,12 @@
 ### Taskfile
 
 - Windows vs. Linux Shell Problem: The problem with the classic Makefile is that it actually does not run command, but rather passes them to the system shell (command-line interface for user to interact with OS).
-  - On Linux/Unix: It passes them to /bin/sh
-  - On Windows: cmd.exe or PowerShell
+  - On Linux/Unix: It passes them to `/bin/sh`
+  - On Windows: `cmd.exe` or PowerShell
 
 - The Taskfile Solution:
   Taskfile includes a built-in Go-based shell interpreter (mvdan.cc/sh).
-  It allows you to write standard Unix-like commands (cp, rm, mv, cat) inside the Taskfile, and Task translates them automatically to work on Windows.
+  It allows us to write standard Unix-like commands (cp, rm, mv, cat) inside the Taskfile, and Task translates them automatically to work on Windows.
 
 ### Build system
 
@@ -28,22 +28,23 @@ In the gradle setup, we have `settings.gradle.kts` and `build.gradle` at root of
 
 ### Quality gate strategy
 
-#### Level 1: Auto-Formatting (Spotless)
+Current backend quality gates are centralized in the `java-quality` convention plugin
+(`backend/build-logic/src/main/kotlin/java-quality.gradle.kts`) and applied in backend modules.
 
-> Goal: Zero mental energy spent on formatting.
-> Action: Runs automatically on git commit.
+#### Level 1: Auto-formatting (Spotless)
 
-#### Level 2: Compile-Time Safety (Error Prone / NullAway)
+> Goal: Keep Java and Gradle Kotlin DSL formatting consistent.
+>
+> Run: `task backend:format` (fix), `task backend:check-format` (verify).
 
-> Goal: Catch NPEs and common bugs while typing.
-> Action: Runs inside the compiler.
+#### Level 2: Compile-time checks (Error Prone)
 
-#### Level 3: Deep Analysis (SpotBugs + FindSecBugs)
+> Goal: Catch bug-prone code patterns during compilation.
+>
+> Run: included in `task backend:check` and `task backend:verify`.
 
-> Goal: Catch resource leaks and security flaws.
-> Action: Runs in the CI pipeline (Docker build).
+#### Level 3: Static analysis (SpotBugs)
 
-#### Level 4: Architecture Safety (ArchUnit)
-
-> Goal: Prevent "Spaghetti Code."
-> Action: Runs as standard JUnit tests.
+> Goal: Detect likely runtime bugs from bytecode analysis.
+>
+> Run: `task backend:spotbugs` or full lifecycle via `task backend:check` / `task backend:verify`.

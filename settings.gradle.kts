@@ -12,6 +12,9 @@ pluginManagement {
     gradlePluginPortal()
   }
 
+  // put internal Gradle plugin projects here
+  // this makes local convention plugins resolvable during the plugins {} phase
+  // and avoids publishing plugins to an external repository just to use them internally
   includeBuild("backend/build-logic")
 }
 

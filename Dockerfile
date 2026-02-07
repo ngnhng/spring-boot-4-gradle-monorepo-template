@@ -42,7 +42,9 @@ RUN chmod +x ./gradlew
 
 COPY --chown=gradle:gradle backend ./backend
 
-# --mount=type=cache: This is a BuildKit feature. It tells Docker: "Save the contents of /cache/.gradle between builds on my local machine/CI." This prevents Gradle from re-downloading the deps every time.
+# --mount=...: BuildKit feature, attach an extra filesystem mount only while this RUN executes
+# `type=cache,target=/cache/.gradle` tells Docker: "Save the contents of /cache/.gradle between builds on my local machine/CI."
+# This prevents Gradle from re-downloading the deps every time.
 # --no-daemon: Gradle usually keeps a background process running to be fast. In Docker, we want it to die immediately after the command to save memory.
 RUN --mount=type=cache,target=/cache/.gradle \
     ./gradlew :backend:onboard-core:classes --no-daemon -x test

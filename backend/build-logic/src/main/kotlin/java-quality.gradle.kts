@@ -24,14 +24,37 @@
 // - Add more quality plugins here.
 // - Ensure corresponding plugin classpath dependencies exist in
 //   backend/build-logic/build.gradle.kts.
+
+import net.ltgt.gradle.errorprone.errorprone
+
 plugins {
     id("java")
     id("com.diffplug.spotless")
     id("com.github.spotbugs")
     id("net.ltgt.errorprone")
+
+    // https://docs.gradle.org/current/userguide/checkstyle_plugin.html
+    checkstyle
 }
 
-// 2) Source formatting policy (Spotless).
+// 2) Checkstyle configuration (source-level style and convention checks).
+//
+// Current policy:
+// - Uses a pinned Checkstyle engine version for deterministic CI/local runs.
+//
+// Configuration file:
+// - The repository-level rules live in `config/checkstyle/checkstyle.xml`.
+// - Gradle's default location (`config/checkstyle/checkstyle.xml`) is used,
+//   so no explicit `configFile` wiring is required here.
+//
+// To adjust:
+// - Bump `toolVersion` when upgrading Checkstyle.
+// - Update `config/checkstyle/checkstyle.xml` to evolve style rules.
+checkstyle {
+    toolVersion = "13.2.0"
+}
+
+// 3) Source formatting policy (Spotless).
 //
 // Current scope:
 // - Applies to Java files under `src/**/*.java` in each consuming module.
@@ -46,16 +69,16 @@ plugins {
 // - If your team standard changes, update here once rather than per module.
 spotless {
     java {
-      target("src/**/*.java")
-      googleJavaFormat().reflowLongStrings()
-      removeUnusedImports()
-      trimTrailingWhitespace()
-      endWithNewline()
-      importOrder("java", "javax", "org", "com", "", "\\#")
+        target("src/**/*.java")
+        googleJavaFormat().reflowLongStrings()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
     }
 }
 
-// 3) SpotBugs configuration (bug-finding on compiled classes).
+// 4) SpotBugs configuration (bug-finding on compiled classes).
+// - See: https://spotbugs.readthedocs.io/en/stable/ant.html#parameters
 //
 // - `toolVersion`: engine version used by SpotBugs tasks.
 // - `ignoreFailures = false`: fails the build on findings (quality gate).
@@ -74,7 +97,7 @@ spotbugs {
     reportLevel.set(com.github.spotbugs.snom.Confidence.HIGH)
 }
 
-// 4) Error Prone compiler dependency.
+// 5) Error Prone compiler dependency.
 //
 // The errorprone plugin adds an `errorprone` configuration. We attach the core
 // checker artifact so Java compilation runs Error Prone checks.
@@ -84,9 +107,11 @@ spotbugs {
 // - Keep plugin version (catalog) and checker version compatible.
 dependencies {
     add("errorprone", "com.google.errorprone:error_prone_core:2.47.0")
+    spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.14.0")
 }
 
-// 5) JDK/compiler compatibility knobs for Error Prone.
+
+// 6) JDK/compiler compatibility knobs for Error Prone.
 //
 // `-XDaddTypeAnnotationsToSymbol=true` is required for Error Prone on JDK 21.
 // Without it, compile tasks fail before any useful diagnostics are reported.
@@ -96,5 +121,12 @@ dependencies {
 // - For module-specific overrides, configure `JavaCompile` in that module after
 //   applying `java-quality`.
 tasks.withType<JavaCompile>().configureEach {
+    options.encoding = "UTF-8"
+    // Critical for modern JDKs (21+)
     options.compilerArgs.add("-XDaddTypeAnnotationsToSymbol=true")
+    options.compilerArgs.add("-XDcompilePolicy=simple")
+    // Critical for Lombok/MapStruct support
+    options.errorprone.disableWarningsInGeneratedCode.set(true)
+    // Exclude specific generated folders from ErrorProne explicitly if needed
+    options.errorprone.excludedPaths.set(".*/build/generated/.*")
 }
