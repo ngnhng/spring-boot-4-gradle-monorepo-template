@@ -1,6 +1,6 @@
 package com.onboard.registration.domain.model;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Objects;

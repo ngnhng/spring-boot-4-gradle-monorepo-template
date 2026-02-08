@@ -1,6 +1,6 @@
 package com.onboard.registration.application.port.in;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import com.onboard.registration.domain.model.RegistrationForm;
 
 /** Input port for registration form write use cases. */

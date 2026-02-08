@@ -1,6 +1,6 @@
 package com.onboard.registration.domain.vo;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 
 /** Value object representing arbitrary registration form data. */
 public class FormData {

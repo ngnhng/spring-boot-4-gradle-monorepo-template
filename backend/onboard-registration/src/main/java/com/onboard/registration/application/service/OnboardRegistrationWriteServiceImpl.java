@@ -1,6 +1,6 @@
 package com.onboard.registration.application.service;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import com.onboard.registration.application.exception.RegistrationFormConflictException;
 import com.onboard.registration.application.exception.RegistrationFormNotFoundException;
 import com.onboard.registration.application.exception.RegistrationFormValidationException;

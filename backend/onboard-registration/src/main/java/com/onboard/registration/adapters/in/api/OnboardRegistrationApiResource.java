@@ -1,7 +1,5 @@
 package com.onboard.registration.adapters.in.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.onboard.registration.application.port.in.OnboardRegistrationReadService;
 import com.onboard.registration.application.port.in.OnboardRegistrationWriteService;
 import com.onboard.registration.domain.model.RegistrationForm;
@@ -23,6 +21,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /** REST adapter for registration form operations. */
 @Component

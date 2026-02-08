@@ -1,6 +1,6 @@
 package com.onboard.registration.adapters.out.persistence;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import com.onboard.infrastructure.core.persistence.AuditableBaseEntity;
 import com.onboard.registration.domain.model.RegistrationFormStatus;
 import jakarta.persistence.Column;

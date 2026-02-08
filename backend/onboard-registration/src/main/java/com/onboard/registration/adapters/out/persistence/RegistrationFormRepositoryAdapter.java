@@ -1,6 +1,6 @@
 package com.onboard.registration.adapters.out.persistence;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import com.onboard.registration.application.port.out.RegistrationFormCommandPort;
 import com.onboard.registration.application.port.out.RegistrationFormQueryPort;
 import com.onboard.registration.domain.model.RegistrationForm;
