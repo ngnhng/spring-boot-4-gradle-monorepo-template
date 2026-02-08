@@ -9,17 +9,15 @@ plugins {
 
 dependencies {
   implementation(project(":backend:onboard-core"))
-  implementation(project(":backend:onboard-loan-origination"))
 
   implementation(libs.spring.boot.starter.web)
-  implementation(libs.spring.boot.starter.data.jpa)
   implementation(libs.spring.boot.starter.validation)
   implementation(libs.swagger.annotations.jakarta)
   implementation(libs.jackson.databind.nullable)
 }
 
 val openApiSpec =
-    layout.projectDirectory.file("src/main/resources/openapi/openapi-onboard-registration.yaml")
+    layout.projectDirectory.file("src/main/resources/openapi/openapi-onboard-loan-origination.yaml")
 val generatedOpenApiDir = layout.buildDirectory.dir("generated/openapi")
 
 sourceSets {
@@ -33,8 +31,8 @@ tasks.named<GenerateTask>("openApiGenerate") {
   generatorName.set("spring")
   inputSpec.set(openApiSpec.asFile.absolutePath)
   outputDir.set(generatedOpenApiDir.get().asFile.absolutePath)
-  apiPackage.set("com.onboard.registration.generated.api")
-  modelPackage.set("com.onboard.registration.generated.model")
+  apiPackage.set("com.onboard.loanorigination.generated.api")
+  modelPackage.set("com.onboard.loanorigination.generated.model")
   modelNameSuffix.set("Dto")
   configOptions.set(
       mapOf(

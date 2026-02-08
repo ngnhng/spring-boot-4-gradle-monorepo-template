@@ -1,0 +1,105 @@
+openapi: 3.0.3
+info:
+  title: Onboard loan-origination API
+  version: 1.0.0
+  description: Sample API-first contract for the loan-origination module.
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: loan-origination
+    description: loan-origination operations
+paths:
+  /api/v1/loan-origination/quotes/{quoteId}:
+    get:
+      tags:
+        - loan-origination
+      operationId: getLoanQuote
+      summary: Get loan quote by id
+      parameters:
+        - name: quoteId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Loan quote found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoanQuote"
+        "404":
+          description: Loan quote not found
+  /api/v1/loan-origination/quotes:
+    post:
+      tags:
+        - loan-origination
+      operationId: createLoanQuote
+      summary: Create a loan quote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLoanQuoteRequest"
+      responses:
+        "201":
+          description: Loan quote created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoanQuote"
+components:
+  schemas:
+    CreateLoanQuoteRequest:
+      type: object
+      required:
+        - productCode
+        - amount
+        - tenorMonths
+      properties:
+        productCode:
+          type: string
+          example: CAR_LOAN
+        amount:
+          type: number
+          format: double
+          minimum: 1
+          example: 15000
+        tenorMonths:
+          type: integer
+          format: int32
+          minimum: 1
+          example: 24
+    LoanQuote:
+      type: object
+      required:
+        - id
+        - productCode
+        - amount
+        - tenorMonths
+        - annualRate
+        - monthlyInstallment
+      properties:
+        id:
+          type: string
+          example: Q-2026-0001
+        productCode:
+          type: string
+          example: CAR_LOAN
+        amount:
+          type: number
+          format: double
+          example: 15000
+        tenorMonths:
+          type: integer
+          format: int32
+          example: 24
+        annualRate:
+          type: number
+          format: double
+          example: 7.25
+        monthlyInstallment:
+          type: number
+          format: double
+          example: 670.32

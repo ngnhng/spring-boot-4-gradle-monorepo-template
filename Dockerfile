@@ -50,7 +50,7 @@ RUN --mount=type=cache,target=/cache/.gradle \
     ./gradlew :backend:onboard-core:classes --no-daemon -x test
 
 RUN --mount=type=cache,target=/cache/.gradle \
-    ./gradlew :backend:onboard-lending:classes --no-daemon -x test
+    ./gradlew :backend:onboard-loan-origination:classes --no-daemon -x test
 
 RUN --mount=type=cache,target=/cache/.gradle \
     ./gradlew :backend:onboard-registration:classes --no-daemon -x test

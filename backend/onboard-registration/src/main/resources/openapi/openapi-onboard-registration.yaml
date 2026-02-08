@@ -1,0 +1,349 @@
+openapi: 3.0.3
+info:
+  title: Onboard registration API
+  version: 1.0.0
+  description: API-first contract for registration form onboarding flows.
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: registration
+    description: Registration form operations
+security:
+  - XUserIdAuth: []
+  - BearerAuth: []
+  - OAuth2:
+      - registration:read
+      - registration:write
+paths:
+  /api/v1/registrations/forms:
+    post:
+      tags:
+        - registration
+      operationId: createRegistrationForm
+      summary: Create a registration form
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRegistrationFormRequest"
+      responses:
+        "201":
+          description: Registration form created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistrationForm"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      tags:
+        - registration
+      operationId: listRegistrationForms
+      summary: Get registration forms
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/RegistrationFormStatus"
+        - name: keyword
+          in: query
+          required: false
+          description: Keyword to search by form reference or dynamic form values
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 200
+            default: 20
+      responses:
+        "200":
+          description: Registration forms returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistrationFormPage"
+  /api/v1/registrations/forms/{formId}:
+    get:
+      tags:
+        - registration
+      operationId: getRegistrationFormDetail
+      summary: Get registration form detail
+      parameters:
+        - name: formId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Registration form detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistrationForm"
+        "404":
+          description: Registration form not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      tags:
+        - registration
+      operationId: updateRegistrationForm
+      summary: Update a draft registration form
+      parameters:
+        - name: formId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRegistrationFormRequest"
+      responses:
+        "200":
+          description: Registration form updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistrationForm"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Registration form not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Registration form cannot be updated in current status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/v1/registrations/forms/{formId}/submit:
+    post:
+      tags:
+        - registration
+      operationId: submitRegistrationForm
+      summary: Submit registration form
+      parameters:
+        - name: formId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitRegistrationFormRequest"
+      responses:
+        "200":
+          description: Registration form submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistrationForm"
+        "404":
+          description: Registration form not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Registration form cannot be submitted in current status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  securitySchemes:
+    XUserIdAuth:
+      type: apiKey
+      in: header
+      name: X-User-Id
+      description: Mock user identity header for local/internal authentication mode
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT bearer token authentication
+    OAuth2:
+      type: oauth2
+      description: OAuth2 bearer token authentication
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.example.com/oauth2/authorize
+          tokenUrl: https://auth.example.com/oauth2/token
+          scopes:
+            registration:read: Read registration forms
+            registration:write: Create, update, and submit registration forms
+  schemas:
+    CreateRegistrationFormRequest:
+      type: object
+      required:
+        - formContent
+      properties:
+        productCode:
+          type: string
+          example: HOMELOAN_ONBOARDING_V1
+        formContent:
+          type: object
+          description: Dynamic form payload; structure is defined by the form template
+          additionalProperties: true
+          example:
+            applicantName: Nguyen Van A
+            identityNo: 012345678901
+            income:
+              amount: 2000
+              currency: USD
+            consentAccepted: true
+    UpdateRegistrationFormRequest:
+      type: object
+      required:
+        - formContent
+      properties:
+        formContent:
+          type: object
+          description: Dynamic form payload; structure is defined by the form template
+          additionalProperties: true
+          example:
+            applicantName: Nguyen Van A
+            identityNo: 012345678901
+            income:
+              amount: 2500
+              currency: USD
+            consentAccepted: true
+    SubmitRegistrationFormRequest:
+      type: object
+      properties:
+        submissionNote:
+          type: string
+          maxLength: 1000
+          example: All supporting documents are completed
+    RegistrationForm:
+      type: object
+      properties:
+        id:
+          type: string
+          example: FRM-2026-00001
+        referenceNo:
+          type: string
+          example: REG-2026-00001
+        productCode:
+          type: string
+          example: HOMELOAN_ONBOARDING_V1
+        formContent:
+          type: object
+          description: Dynamic form payload; structure is defined by the form template
+          additionalProperties: true
+          example:
+            applicantName: Nguyen Van A
+            identityNo: 012345678901
+            income:
+              amount: 2500
+              currency: USD
+            consentAccepted: true
+        status:
+          $ref: "#/components/schemas/RegistrationFormStatus"
+        submittedAt:
+          type: string
+          format: date-time
+          example: 2026-02-07T10:15:30Z
+        createdAt:
+          type: string
+          format: date-time
+          example: 2026-02-07T10:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2026-02-07T10:15:30Z
+    RegistrationFormStatus:
+      type: string
+      description: Registration form lifecycle status
+      enum:
+        - DRAFT
+        - SUBMITTED
+        - APPROVED
+        - REJECTED
+        - CANCELLED
+    RegistrationFormPage:
+      type: object
+      required:
+        - items
+        - page
+        - size
+        - totalElements
+        - totalPages
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RegistrationForm"
+        page:
+          type: integer
+          format: int32
+          minimum: 0
+          example: 0
+        size:
+          type: integer
+          format: int32
+          minimum: 1
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          minimum: 0
+          example: 123
+        totalPages:
+          type: integer
+          format: int32
+          minimum: 0
+          example: 7
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: REGISTRATION_FORM_NOT_FOUND
+        message:
+          type: string
+          example: Registration form FRM-2026-00001 is not found
+        details:
+          type: array
+          items:
+            type: string
+          example:
+            - field email has invalid format

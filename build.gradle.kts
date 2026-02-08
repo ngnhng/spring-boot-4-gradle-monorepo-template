@@ -62,5 +62,4 @@ subprojects {
 
   // The Gradle team and the Spring team are slowly moving away from the
   // io.spring.dependency-management plugin in favor of Gradle's native Platform system.
-  dependencies { implementation(platform(catalog.spring.boot.bom)) }
 }

@@ -1,0 +1,121 @@
+volumes:
+  pg_data: {}
+  rabbitmq_data: {}
+  redis_data: {}
+
+services:
+  postgres-primary:
+    image: postgres:18-alpine
+    restart: "no"
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PRIMARY_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    command: >
+      -c wal_level=replica
+      -c max_wal_senders=10
+      -c max_replication_slots=10
+      -c hot_standby=on
+      -c max_connections=100
+    volumes:
+      - pg18-primary-data:/var/lib/postgresql
+      - ./deployment/local/postgres18:/docker-entrypoint-initdb.d
+    networks:
+      - app
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U postgres -d postgres'"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+    profiles:
+      - postgres
+      - infra
+      - all
+
+  postgres-replica:
+    image: postgres:18-alpine
+    restart: "no"
+    shm_size: 128mb
+    depends_on:
+      - postgres-primary
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_REPLICA_0_PASSWORD:-postgres}
+      PGDATA: /var/lib/postgresql/18/docker
+      # used by pg_isready / pg_basebackup for repl_user
+      PGPASSWORD: repl_password
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+
+        # If already initialized, just start as standby
+        if [ -s "$$PGDATA/PG_VERSION" ]; then
+          echo "Replica already initialized, starting..."
+          exec gosu postgres postgres
+        fi
+
+        echo "Initializing replica data directory at $$PGDATA"
+        mkdir -p "$$PGDATA"
+        chown -R postgres:postgres /var/lib/postgresql
+        chmod 700 "$$PGDATA"
+
+        echo "Waiting for primary to accept connections..."
+        until pg_isready -h postgres-primary -p 5432 >/dev/null 2>&1; do
+          echo "  ... still waiting"
+          sleep 1
+        done
+
+        echo "Running pg_basebackup from primary..."
+        gosu postgres pg_basebackup -h postgres-primary -p 5432 -D "$$PGDATA" -U repl_user -Fp -Xs -P -R
+
+        echo "Starting replica PostgreSQL..."
+        exec gosu postgres postgres -c max_connections=200
+    networks:
+      - app
+    volumes:
+      - pg18-replica-data:/var/lib/postgresql
+    profiles:
+      - postgres
+      - infra
+      - all
+
+  valkey:
+    image: valkey/valkey:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey_data:/data
+    command: valkey-server --save "" --appendonly no --protected-mode no --requirepass valkey
+    networks:
+      - app
+    profiles:
+      - valkey
+      - infra
+      - all
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    restart: "no"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - app
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+    profiles:
+      - rabbitmq
+      - infra
+      - all

@@ -54,7 +54,7 @@ dependencyResolutionManagement {
 // https://docs.gradle.org/9.3.1/kotlin-dsl/gradle/org.gradle.api.initialization/-settings/include.html
 include(
     ":backend:onboard-provider",
-    ":backend:onboard-lending",
-    ":backend:onboard-core",
+    ":backend:onboard-loan-origination",
     ":backend:onboard-registration",
+    ":backend:onboard-core",
 )

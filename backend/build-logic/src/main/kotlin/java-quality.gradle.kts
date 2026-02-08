@@ -31,7 +31,7 @@ plugins {
     id("java")
     id("com.diffplug.spotless")
     id("com.github.spotbugs")
-    id("net.ltgt.errorprone")
+    id("net.ltgt.errorprone") // https://github.com/tbroyer/gradle-errorprone-plugin
 
     // https://docs.gradle.org/current/userguide/checkstyle_plugin.html
     checkstyle
@@ -97,16 +97,22 @@ spotbugs {
     reportLevel.set(com.github.spotbugs.snom.Confidence.HIGH)
 }
 
-// 5) Error Prone compiler dependency.
+// 5) Error Prone/JSpecify/NullAway dependencies.
+//   See: https://spring.io/blog/2025/11/12/null-safe-applications-with-spring-boot-4
+//        https://github.com/sdeleuze/jspecify-nullaway-demo/tree/main
 //
-// The errorprone plugin adds an `errorprone` configuration. We attach the core
-// checker artifact so Java compilation runs Error Prone checks.
+// - `org.jspecify:jspecify` provides standard nullness annotations used by
+//   modern Spring APIs and project code (`@NullMarked`, `@Nullable`, etc.).
+// - The errorprone plugin adds an `errorprone` configuration used to attach
+//   Error Prone checks, including NullAway.
 //
 // To adjust:
-// - Bump version here when upgrading Error Prone.
-// - Keep plugin version (catalog) and checker version compatible.
+// - Bump versions here when upgrading Error Prone/NullAway/JSpecify.
+// - Keep plugin/checker versions compatible.
 dependencies {
-    add("errorprone", "com.google.errorprone:error_prone_core:2.47.0")
+    implementation("org.jspecify:jspecify:1.0.0")
+    add("errorprone", "com.google.errorprone:error_prone_core:2.42.0")
+    add("errorprone", "com.uber.nullaway:nullaway:0.12.12")
     spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.14.0")
 }
 
@@ -125,8 +131,12 @@ tasks.withType<JavaCompile>().configureEach {
     // Critical for modern JDKs (21+)
     options.compilerArgs.add("-XDaddTypeAnnotationsToSymbol=true")
     options.compilerArgs.add("-XDcompilePolicy=simple")
-    // Critical for Lombok/MapStruct support
-    options.errorprone.disableWarningsInGeneratedCode.set(true)
-    // Exclude specific generated folders from ErrorProne explicitly if needed
-    options.errorprone.excludedPaths.set(".*/build/generated/.*")
+    options.errorprone  {
+        excludedPaths = ".*/build/generated/.*" // Exclude specific generated folders from ErrorProne explicitly if needed
+        disableWarningsInGeneratedCode = true // Critical for Lombok/MapStruct support
+        disableAllChecks = true // Other error prone checks are disabled
+        option("NullAway:OnlyNullMarked", "true") // Enable nullness checks only in null-marked code
+        error("NullAway") // bump checks from warnings (default) to errors
+        option("NullAway:JSpecifyMode", "true") // https://github.com/uber/NullAway/wiki/JSpecify-Support
+    }
 }
