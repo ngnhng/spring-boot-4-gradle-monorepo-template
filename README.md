@@ -122,3 +122,75 @@ In the gradle setup, we have `settings.gradle.kts` and `build.gradle` at root of
 #### Separate Pure Domain from Entity
 
 #### CQRS, maker-checker and audit trail
+
+##### Audit
+
+The hierarchy of auditing patterns in modern software architecture, ranging from simple entity metadata to complex, immutable event streams.
+
+Level 1: Basic Entity Metadata (The "Who & When")
+
+This is the bare minimum for any production database. It tracks **state**, but not **history**.
+
+- **Concept:** Every table has columns for `created_at`, `created_by`, `updated_at`, `updated_by`.
+- **Implementation:**
+  - **Spring Boot:** `@EnableJpaAuditing` with `@CreatedDate`, `@LastModifiedDate`, etc.
+  - **Database:** Default values (`DEFAULT CURRENT_TIMESTAMP`) or Triggers.
+- **What it answers:** "When was this row last touched, and by whom?"
+- **Limitation:** It is destructive. You cannot see what the value was _before_ the update. You only see the current state.
+
+Level 2: Shadow Tables / Snapshots (The "Envers" Approach)
+
+This creates a full historical record of every change by copying the data to a parallel table.
+
+- **Concept:** For every table `users`, there is a `users_audit` (or `users_history`) table. On every `INSERT/UPDATE/DELETE`, a copy of the row is inserted into the audit table with a revision number and type (ADD, MOD, DEL).
+- **Implementation:**
+  - **Spring Boot:** **Hibernate Envers** (`@Audited` on the entity). Zero boilerplate code.
+  - **Database:** Triggers that copy `NEW.*` to the history table.
+- **What it answers:** "What did the Product look like last Tuesday at 2 PM?"
+- **Limitation:** Storage heavy. If you change one column in a row with 50 columns, Envers duplicates all 50 columns in the audit table.
+
+Level 3: Field-Level Diffs (The "Javers" Approach)
+
+Instead of storing the _whole row_, you store only the _delta_ (what changed).
+
+- **Concept:** A centralized `audit_log` table stores JSON payloads representing the diff.
+  - _Example:_ `{"field": "status", "old": "PENDING", "new": "APPROVED"}`
+- **Implementation:**
+  - **Library:** **Javers** (Java library for object diffing).
+  - **Custom:** An EntityListener that compares `state` vs `oldState` and writes to a MongoDB or JSONB column in Postgres.
+- **What it answers:** "Show me exactly which fields changed in this transaction."
+- **Pros:** Efficient storage; very easy to render a "Change Log" UI for users.
+
+Level 4: Domain / Activity Auditing (The "Business Intent")
+
+Levels 1-3 track _data_. Level 4 tracks _intent_.
+
+- **Concept:** Technical audits show "status changed from 1 to 2". Domain audits show "User A approved the Invoice". This is often required for compliance (SOC2, HIPAA, Banking).
+- **Implementation:**
+  - **Explicit Service Calls:** `auditService.log("INVOICE_APPROVED", invoiceId, user);`
+  - **AOP:** Custom annotation `@LogActivity(action="APPROVE_INVOICE")` on service methods.
+- **What it answers:** "Why did this data change?" or "Who tried to access this sensitive record?"
+- **Pros:** meaningful to non-technical staff/auditors.
+
+Level 5: Asynchronous / Enterprise Auditing (CDC)
+
+In high-scale systems, writing audit logs synchronously (in the same transaction) slows down the application.
+
+- **Concept:** The application writes to the DB as normal. A separate process reads the **Database Transaction Log (WAL)** and generates audit events.
+- **Implementation:**
+  - **Pattern:** **CDC (Change Data Capture)**.
+  - **Tools:** **Debezium** + Kafka. Debezium listens to Postgres WAL, pushes changes to Kafka, and an Audit Service consumes them to write to Elasticsearch/Snowflake.
+- **Pros:** Zero performance impact on the main application. Decoupled.
+- **Cons:** High infrastructure complexity. Eventual consistency (audit log might lag by 100ms).
+
+Level 6: Event Sourcing (The "Ultimate" Audit)
+
+Here, the audit log **is** the database.
+
+- **Concept:** You do not store the "Current State" (e.g., `Wallet Balance: $100`). You store the transactions (`Credit $50`, `Credit $50`).
+- **Implementation:**
+  - **Architecture:** **CQRS + Event Sourcing**.
+  - **Tools:** Axon Framework, Kafka Streams, or EventStoreDB.
+- **How it works:** To get the current state, you replay all events. You cannot "delete" or "overwrite" data, you can only append a "Correction Event".
+- **What it answers:** absolute mathematical proof of how the system arrived at the current state.
+- **Cons:** Extremely complex to develop and maintain. Overkill for 95% of CRUD applications.

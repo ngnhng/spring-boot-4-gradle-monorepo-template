@@ -1,7 +1,8 @@
 volumes:
-  pg_data: {}
+  pg18_primary_data: {}
+  pg18_replica_data: {}
   rabbitmq_data: {}
-  redis_data: {}
+  valkey_data: {}
 
 services:
   postgres-primary:
@@ -19,10 +20,8 @@ services:
       -c hot_standby=on
       -c max_connections=100
     volumes:
-      - pg18-primary-data:/var/lib/postgresql
+      - pg18_primary_data:/var/lib/postgresql
       - ./deployment/local/postgres18:/docker-entrypoint-initdb.d
-    networks:
-      - app
     healthcheck:
       test: ["CMD-SHELL", "sh -c 'pg_isready -U postgres -d postgres'"]
       interval: 1m30s
@@ -73,10 +72,8 @@ services:
 
         echo "Starting replica PostgreSQL..."
         exec gosu postgres postgres -c max_connections=200
-    networks:
-      - app
     volumes:
-      - pg18-replica-data:/var/lib/postgresql
+      - pg18_replica_data:/var/lib/postgresql
     profiles:
       - postgres
       - infra
@@ -89,8 +86,6 @@ services:
     volumes:
       - valkey_data:/data
     command: valkey-server --save "" --appendonly no --protected-mode no --requirepass valkey
-    networks:
-      - app
     profiles:
       - valkey
       - infra
@@ -107,8 +102,6 @@ services:
       - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
-    networks:
-      - app
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 1m30s

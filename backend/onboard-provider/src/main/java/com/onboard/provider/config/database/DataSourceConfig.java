@@ -9,9 +9,17 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 
+/** Creates routing-aware datasource beans for write and replica traffic split. */
 @Configuration
 public class DataSourceConfig {
 
+  /**
+   * Builds the routing datasource that delegates by transaction read-only flag.
+   *
+   * @param writerDataSource primary datasource
+   * @param readerDataSource replica datasource
+   * @return routing datasource
+   */
   @Bean
   public DataSource routingDataSource(
       @Qualifier("writerDataSource") DataSource writerDataSource,
@@ -28,6 +36,12 @@ public class DataSourceConfig {
     return routingDataSource;
   }
 
+  /**
+   * Wraps routing datasource with lazy connection proxy for transaction-aware lookup.
+   *
+   * @param routingDataSource routing datasource bean
+   * @return primary datasource proxy
+   */
   @Primary
   @Bean
   public DataSource dataSource(@Qualifier("routingDataSource") DataSource routingDataSource) {

@@ -14,16 +14,34 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice(basePackageClasses = OnboardRegistrationApiResource.class)
 public class RegistrationGlobalExceptionHandler {
 
+  /**
+   * Maps validation failures to HTTP 400.
+   *
+   * @param ex validation exception
+   * @return error response payload
+   */
   @ExceptionHandler(RegistrationFormValidationException.class)
   public ResponseEntity<ErrorResponseDto> handleValidation(RegistrationFormValidationException ex) {
     return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.geti18nMessageCode(), ex.getMessage());
   }
 
+  /**
+   * Maps missing registration forms to HTTP 404.
+   *
+   * @param ex not-found exception
+   * @return error response payload
+   */
   @ExceptionHandler(RegistrationFormNotFoundException.class)
   public ResponseEntity<ErrorResponseDto> handleNotFound(RegistrationFormNotFoundException ex) {
     return buildErrorResponse(HttpStatus.NOT_FOUND, ex.geti18nMessageCode(), ex.getMessage());
   }
 
+  /**
+   * Maps state conflicts to HTTP 409.
+   *
+   * @param ex conflict exception
+   * @return error response payload
+   */
   @ExceptionHandler(RegistrationFormConflictException.class)
   public ResponseEntity<ErrorResponseDto> handleConflict(RegistrationFormConflictException ex) {
     return buildErrorResponse(HttpStatus.CONFLICT, ex.geti18nMessageCode(), ex.getMessage());

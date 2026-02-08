@@ -1,6 +1,5 @@
 package com.onboard.registration.adapters.out.persistence;
 
-import tools.jackson.databind.node.ObjectNode;
 import com.onboard.registration.application.port.out.RegistrationFormCommandPort;
 import com.onboard.registration.application.port.out.RegistrationFormQueryPort;
 import com.onboard.registration.domain.model.RegistrationForm;
@@ -10,6 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.node.ObjectNode;
 
 /** Persistence adapter mapping registration forms between domain and JPA models. */
 @Component

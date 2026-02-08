@@ -21,6 +21,17 @@ paths:
         - registration
       operationId: createRegistrationForm
       summary: Create a registration form
+      parameters:
+        - name: X-Idempotency-Key
+          in: header
+          required: false
+          description: >
+            Idempotency key for safely retrying create requests without creating duplicate
+            registration forms.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 128
       requestBody:
         required: true
         content:

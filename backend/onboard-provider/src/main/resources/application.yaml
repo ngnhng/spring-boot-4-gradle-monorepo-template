@@ -1,3 +1,12 @@
+logging:
+  structured:
+    json:
+      stacktrace:
+        root: first
+        max-length: 1024
+        include-common-frames: true
+        include-hashes: true
+
 spring:
   application:
     name: onboard-provider
@@ -9,6 +18,34 @@ spring:
   jackson:
     date-format: yyyy-MM-dd'T'HH:mm:ss.SSSZ
     time-zone: UTC
+  rabbitmq:
+    addresses: ${RABBITMQ_ADDRESSES:localhost:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+    connection-timeout: 5s
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+    listener:
+      simple:
+        prefetch: 50
+        default-requeue-rejected: false
+  data:
+    redis:
+      host: ${VALKEY_HOST:localhost}
+      port: ${VALKEY_PORT:6379}
+      password: ${VALKEY_PASSWORD:valkey}
+      database: ${VALKEY_DATABASE:0}
+      timeout: 3s
+      connect-timeout: 3s
+      client-type: lettuce
+  cache:
+    type: redis
+    redis:
+      cache-null-values: false
+      time-to-live: 10m
   jpa:
     hibernate:
       ddl-auto: validate
@@ -51,6 +88,54 @@ spring:
         prepStmtCacheSize: 250
         prepStmtCacheSqlLimit: 2048
 
+platform:
+  idempotency-key-header-name: X-Idempotency-Key
+  cache:
+    entries:
+      - name: registration.form.detail
+        ttl: 10m
+      - name: registration.form.list
+        ttl: 5m
+      - name: loan.eligibility.result
+        ttl: 30m
+  messaging:
+    rabbit:
+      exchanges:
+        - name: onboard.registration.exchange
+          type: topic
+          durable: true
+        - name: onboard.registration.dlx
+          type: topic
+          durable: true
+      queues:
+        - name: onboard.registration.created.q
+          quorum: true
+          dead-letter-exchange: onboard.registration.dlx
+          dead-letter-routing-key: registration.dlq
+        - name: onboard.registration.updated.q
+          quorum: true
+          dead-letter-exchange: onboard.registration.dlx
+          dead-letter-routing-key: registration.dlq
+        - name: onboard.registration.submitted.q
+          quorum: true
+          dead-letter-exchange: onboard.registration.dlx
+          dead-letter-routing-key: registration.dlq
+        - name: onboard.registration.dlq
+          durable: true
+      bindings:
+        - exchange: onboard.registration.exchange
+          queue: onboard.registration.created.q
+          routing-key: registration.created
+        - exchange: onboard.registration.exchange
+          queue: onboard.registration.updated.q
+          routing-key: registration.updated
+        - exchange: onboard.registration.exchange
+          queue: onboard.registration.submitted.q
+          routing-key: registration.submitted
+        - exchange: onboard.registration.dlx
+          queue: onboard.registration.dlq
+          routing-key: registration.dlq
+
 ---
 spring:
   config:
@@ -58,18 +143,57 @@ spring:
       on-profile: postgres
   datasource:
     primary:
-      jdbc-url: jdbc:postgresql://localhost:5432/onboard
+      jdbc-url: jdbc:postgresql://${POSTGRES_PRIMARY_HOST:localhost}:${POSTGRES_PRIMARY_PORT:5432}/${POSTGRES_PRIMARY_DB:postgres}
       username: postgres
       password: postgres
       driver-class-name: org.postgresql.Driver
     replica:
-      jdbc-url: jdbc:postgresql://localhost:5433/onboard
+      jdbc-url: jdbc:postgresql://${POSTGRES_REPLICA_HOST:localhost}:${POSTGRES_REPLICA_PORT:5433}/${POSTGRES_REPLICA_DB:postgres}
       username: postgres
       password: postgres
       driver-class-name: org.postgresql.Driver
 platform:
   database:
     type: postgres
+
+---
+spring:
+  config:
+    activate:
+      on-profile: rabbitmq-ha
+  rabbitmq:
+    addresses: ${RABBITMQ_ADDRESSES:rabbitmq-1:5672,rabbitmq-2:5672,rabbitmq-3:5672}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: redis-sentinel
+  data:
+    redis:
+      sentinel:
+        master: ${VALKEY_SENTINEL_MASTER:mymaster}
+        nodes: ${VALKEY_SENTINEL_NODES:localhost:26379,localhost:26380,localhost:26381}
+      password: ${VALKEY_PASSWORD:valkey}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: redis-master-replica
+platform:
+  redis:
+    ha:
+      mode: master-replica
+      password: ${VALKEY_PASSWORD:valkey}
+      master:
+        host: ${VALKEY_MASTER_HOST:localhost}
+        port: ${VALKEY_MASTER_PORT:6379}
+      replicas:
+        - host: ${VALKEY_REPLICA_1_HOST:localhost}
+          port: ${VALKEY_REPLICA_1_PORT:6380}
+        - host: ${VALKEY_REPLICA_2_HOST:localhost}
+          port: ${VALKEY_REPLICA_2_PORT:6381}
 
 ---
 spring:

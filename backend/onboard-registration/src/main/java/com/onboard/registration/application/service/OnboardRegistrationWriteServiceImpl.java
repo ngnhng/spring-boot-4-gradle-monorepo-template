@@ -1,6 +1,6 @@
 package com.onboard.registration.application.service;
 
-import tools.jackson.databind.node.ObjectNode;
+import com.onboard.infrastructure.core.idempotency.Idempotent;
 import com.onboard.registration.application.exception.RegistrationFormConflictException;
 import com.onboard.registration.application.exception.RegistrationFormNotFoundException;
 import com.onboard.registration.application.exception.RegistrationFormValidationException;
@@ -12,10 +12,12 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.node.ObjectNode;
 
 /** Application service for registration form write use cases. */
 @Service
@@ -65,6 +67,7 @@ public class OnboardRegistrationWriteServiceImpl implements OnboardRegistrationW
   }
 
   @Override
+  @Idempotent(expire = 60, timeUnit = TimeUnit.SECONDS, namespace = "registration.submit-form")
   public RegistrationForm submitRegistrationForm(String formId, String submissionNote) {
     RegistrationForm existingForm =
         registrationFormCommandPort

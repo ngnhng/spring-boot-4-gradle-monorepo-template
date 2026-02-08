@@ -1,7 +1,7 @@
 package com.onboard.registration.application.port.in;
 
-import tools.jackson.databind.node.ObjectNode;
 import com.onboard.registration.domain.model.RegistrationForm;
+import tools.jackson.databind.node.ObjectNode;
 
 /** Input port for registration form write use cases. */
 public interface OnboardRegistrationWriteService {

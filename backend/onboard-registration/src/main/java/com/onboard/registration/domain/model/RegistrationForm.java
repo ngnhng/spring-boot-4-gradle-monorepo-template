@@ -1,9 +1,9 @@
 package com.onboard.registration.domain.model;
 
-import tools.jackson.databind.node.ObjectNode;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Objects;
+import tools.jackson.databind.node.ObjectNode;
 
 /** Registration form aggregate root. */
 public record RegistrationForm(

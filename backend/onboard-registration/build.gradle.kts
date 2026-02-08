@@ -16,6 +16,10 @@ dependencies {
   implementation(libs.spring.boot.starter.validation)
   implementation(libs.swagger.annotations.jakarta)
   implementation(libs.jackson.databind.nullable)
+
+  testImplementation(libs.spring.boot.starter.test)
+  testImplementation(libs.archunit)
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 val openApiSpec =
@@ -75,3 +79,5 @@ tasks.named<Checkstyle>("checkstyleMain") {
   // Only style-check handwritten source, not generated/library code under build/.
   source = fileTree("src/main/java")
 }
+
+tasks.test { useJUnitPlatform() }

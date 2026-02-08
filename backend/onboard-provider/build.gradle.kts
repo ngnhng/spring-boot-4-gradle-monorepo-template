@@ -15,7 +15,9 @@ dependencies {
   implementation(libs.spring.boot.starter.data.jpa)
   implementation(libs.spring.boot.starter.validation)
   implementation(libs.spring.boot.starter.security)
-  implementation(libs.springdoc.openapi.starter.webmvc.ui)
+  implementation(libs.spring.boot.starter.amqp)
+  implementation(libs.spring.boot.starter.json)
+  implementation(libs.spring.boot.starter.data.redis)
 
   runtimeOnly(libs.postgresql)
   runtimeOnly(libs.h2)

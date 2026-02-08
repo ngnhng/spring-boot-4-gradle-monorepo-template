@@ -1,6 +1,5 @@
 package com.onboard.registration.adapters.out.persistence;
 
-import tools.jackson.databind.node.ObjectNode;
 import com.onboard.infrastructure.core.persistence.AuditableBaseEntity;
 import com.onboard.registration.domain.model.RegistrationFormStatus;
 import jakarta.persistence.Column;
@@ -18,6 +17,7 @@ import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.databind.node.ObjectNode;
 
 /** JPA entity for persisted registration forms. */
 @Entity

@@ -1,5 +1,6 @@
 package com.onboard.registration.adapters.in.api;
 
+import com.onboard.infrastructure.core.idempotency.Idempotent;
 import com.onboard.registration.application.port.in.OnboardRegistrationReadService;
 import com.onboard.registration.application.port.in.OnboardRegistrationWriteService;
 import com.onboard.registration.domain.model.RegistrationForm;
@@ -17,6 +18,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,8 +35,14 @@ public class OnboardRegistrationApiResource implements RegistrationApiDelegate {
   private final OnboardRegistrationWriteService onboardRegistrationWriteService;
   private final ObjectMapper objectMapper;
 
+  @Idempotent(expire = 60, timeUnit = TimeUnit.SECONDS, namespace = "registration.create-form")
   @Override
   public ResponseEntity<RegistrationFormDto> createRegistrationForm(
+      CreateRegistrationFormRequestDto createRegistrationFormRequestDto, String idempotencyKey) {
+    return doCreateRegistrationForm(createRegistrationFormRequestDto);
+  }
+
+  private ResponseEntity<RegistrationFormDto> doCreateRegistrationForm(
       CreateRegistrationFormRequestDto createRegistrationFormRequestDto) {
     RegistrationForm createdForm =
         onboardRegistrationWriteService.createRegistrationForm(

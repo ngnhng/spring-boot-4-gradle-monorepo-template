@@ -1,5 +1,6 @@
 package com.onboard.infrastructure.core.config;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,7 +12,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /** Root configuration properties for the onboard platform. */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "onboard")
+@ConfigurationProperties(prefix = "platform")
 public class PlatformProperties {
   private String nodeId;
   private String idempotencyKeyHeaderName;
@@ -23,6 +24,8 @@ public class PlatformProperties {
 
   private CorsProperties cors;
   private SecurityProperties security;
+  private CacheProperties cache;
+  private MessagingProperties messaging;
 
   /** CORS configuration applied to inbound HTTP endpoints. */
   @Getter
@@ -104,6 +107,67 @@ public class PlatformProperties {
     public static class SecurityHsts {
 
       private boolean enabled;
+    }
+  }
+
+  /** Cache names and cache policies. */
+  @Getter
+  @Setter
+  public static class CacheProperties {
+    private List<CacheEntry> entries = new ArrayList<>();
+
+    /** Individual cache definition. */
+    @Getter
+    @Setter
+    public static class CacheEntry {
+      private String name;
+      private Duration ttl = Duration.ofMinutes(10);
+    }
+  }
+
+  /** Messaging-related properties. */
+  @Getter
+  @Setter
+  public static class MessagingProperties {
+    private RabbitProperties rabbit;
+
+    /** RabbitMQ topology configuration. */
+    @Getter
+    @Setter
+    public static class RabbitProperties {
+      private List<Exchange> exchanges = new ArrayList<>();
+      private List<Queue> queues = new ArrayList<>();
+      private List<Binding> bindings = new ArrayList<>();
+
+      /** Exchange definition. */
+      @Getter
+      @Setter
+      public static class Exchange {
+        private String name;
+        private String type = "topic";
+        private boolean durable = true;
+        private boolean autoDelete = false;
+      }
+
+      /** Queue definition. */
+      @Getter
+      @Setter
+      public static class Queue {
+        private String name;
+        private boolean durable = true;
+        private boolean quorum = false;
+        private String deadLetterExchange;
+        private String deadLetterRoutingKey;
+      }
+
+      /** Binding definition between exchange and queue. */
+      @Getter
+      @Setter
+      public static class Binding {
+        private String exchange;
+        private String queue;
+        private String routingKey = "";
+      }
     }
   }
 }

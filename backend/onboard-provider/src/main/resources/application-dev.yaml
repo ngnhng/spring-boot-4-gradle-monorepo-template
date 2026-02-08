@@ -5,6 +5,8 @@ platform:
 
 spring:
   jpa:
+    hibernate:
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -16,6 +18,15 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
     org.hibernate.orm.jdbc.extract: TRACE
+    org.hibernate.orm.jdbc.batch: DEBUG
+    org.hibernate.orm.jdbc.mutation: DEBUG
+    org.hibernate.orm.transaction: DEBUG
     org.hibernate.stat: DEBUG
     org.springframework.orm.jpa: DEBUG
     org.springframework.transaction: TRACE
+    org.springframework.jdbc.core: TRACE
+    org.springframework.jdbc.datasource: DEBUG
+    com.zaxxer.hikari: DEBUG
+    com.zaxxer.hikari.pool.HikariPool: DEBUG
+    com.zaxxer.hikari.pool.PoolBase: DEBUG
+    org.postgresql: DEBUG
