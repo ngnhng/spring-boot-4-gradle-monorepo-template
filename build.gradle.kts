@@ -53,13 +53,11 @@ subprojects {
   // implementation("com.fasterxml.jackson.core:jackson-databind") (no version).
   // This plugin looks at the Spring Boot version we defined in the root and automatically fills in
   // the compatible versions for all these libraries so they don't crash into each other.
+  //
   // BUT: The Gradle team and the Spring team are slowly moving away from the
   // io.spring.dependency-management plugin in favor of Gradle's native Platform system.
   // apply(plugin = "io.spring.dependency-management")
 
   // https://docs.gradle.org/9.3.1/userguide/toolchains.html
   java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
-
-  // The Gradle team and the Spring team are slowly moving away from the
-  // io.spring.dependency-management plugin in favor of Gradle's native Platform system.
 }
