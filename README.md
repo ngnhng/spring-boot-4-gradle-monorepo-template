@@ -1,5 +1,14 @@
 ## Java Spring 4.x Gradle Multi-module Setup Template
 
+### Create a repository from this template (GitHub CLI)
+
+```bash
+gh repo create \
+  --template ngnhng/spring-boot-4-gradle-monorepo-template \
+  --private \
+  --clone <your-repo-name>
+```
+
 - In scope:
   - This repository will try to combine aspects of layered architecture, domain-driven and hexagonal (ports and adapters) to try to produce a readable and maintainable codebase.
 
