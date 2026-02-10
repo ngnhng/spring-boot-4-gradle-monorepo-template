@@ -1,5 +1,7 @@
 ## Java Spring 4.x Gradle Multi-module Setup Template
 
+> Why gradle? It's 2026 and I don't want to look at XMLs anymore.
+
 ### Create a repository from this template (GitHub CLI)
 
 ```bash
