@@ -24,7 +24,13 @@ gh repo create \
 The template is organized into multiple domain-specific modules at the root level:
 
 ```
-
+backend/
+├── build-logic/              # Shared Gradle convention plugins (quality, Java defaults)
+├── integration-tests/        # Cross-module integration test suite
+├── onboard-provider/         # Provider-facing application module
+├── onboard-registration/     # Registration domain module
+├── onboard-loan-origination/ # Loan origination domain module
+└── onboard-core/             # Shared domain primitives and cross-cutting logic
 ```
 
 #### Standard module structure
@@ -106,7 +112,42 @@ Quality gate behavior:
 
 ### Multi-module project versus Single module project
 
+A single module is usually the best default when the codebase is small, the team is small,
+and release boundaries are simple. A multi-module setup is useful when domain boundaries are
+clear and you need stronger build-time separation between concerns.
+
+Use a **single module** when:
+
+- The project is still in early discovery and architecture changes frequently.
+- Most code changes touch the same area, so split boundaries add little value.
+- You want faster onboarding and lower build/tooling complexity.
+
+Use a **multi-module project** when:
+
+- Domains are stable (`registration`, `loan-origination`, `provider`) and should evolve independently.
+- You want explicit dependency direction (e.g., domain modules should not depend on application modules).
+- You need reusable shared modules (e.g., `onboard-core`) across multiple services.
+- You want module-level quality gates and architecture tests to enforce boundaries.
+
+Trade-offs:
+
+- Multi-module improves maintainability and dependency hygiene, but increases build setup and refactoring overhead.
+- Single module keeps velocity high early on, but can become harder to scale as coupling grows.
+
 #### When to create a module
+
+Create a new module only when at least one of these is true:
+
+- The package has a distinct business capability and a clear owner.
+- It needs an independent dependency set or different runtime integration.
+- You need to enforce compile-time isolation from other domains.
+- It is reused by multiple modules and should not be duplicated.
+
+Avoid creating a module when:
+
+- The split is only for folder organization.
+- The boundaries are still unclear and likely to be merged again.
+- The team cannot maintain the additional build and dependency complexity yet.
 
 ### Taskfile
 
