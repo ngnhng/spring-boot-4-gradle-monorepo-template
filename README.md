@@ -33,15 +33,25 @@ backend/
 └── onboard-core/             # Shared domain primitives and cross-cutting logic
 ```
 
-#### Standard module structure
+#### Standard module structure (clear view)
 
-```
+```text
 <module-name>/
 ├── src/
 │   ├── main/
-│   │   ├── java/
+│   │   ├── java/com/<app>/<bounded-context>/
+│   │   │   ├── application/              # Use cases / service orchestration
+│   │   │   ├── domain/                   # Domain model (entities, VOs, rules)
+│   │   │   ├── adapters/
+│   │   │   │   ├── in/                   # Inbound adapters (Service-to-service, REST, EDA, etc.)
+│   │   │   │   └── out/                  # Outbound adapters (DB, clients)
+│   │   │   └── config/                   # (Optional) Spring configuration
 │   │   └── resources/
+│   │       ├── application.yml
+│   │       └── db/
 │   └── test/
+│       ├── java/com/<app>/<bounded-context>/
+│       └── resources/
 ├── build.gradle.kts
 ```
 
