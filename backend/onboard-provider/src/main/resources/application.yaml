@@ -56,7 +56,6 @@ spring:
   datasource:
     primary:
       pool-name: onboard-writer-pool
-      auto-commit: false
       minimum-idle: 5
       maximum-pool-size: 30
       connection-timeout: 30000
@@ -72,7 +71,6 @@ spring:
         prepStmtCacheSqlLimit: 2048
     replica:
       pool-name: onboard-reader-pool
-      auto-commit: false
       read-only: true
       minimum-idle: 5
       maximum-pool-size: 20
@@ -87,6 +85,9 @@ spring:
         cachePrepStmts: true
         prepStmtCacheSize: 250
         prepStmtCacheSqlLimit: 2048
+  liquibase:
+    enabled: false
+    change-log: classpath:db/changelog/db.changelog-master.yaml
 
 platform:
   idempotency-key-header-name: X-Idempotency-Key
@@ -147,14 +148,21 @@ spring:
       username: postgres
       password: postgres
       driver-class-name: org.postgresql.Driver
+platform:
+  database:
+    type: postgres
+
+---
+spring:
+  config:
+    activate:
+      on-profile: postgres-replica
+  datasource:
     replica:
       jdbc-url: jdbc:postgresql://${POSTGRES_REPLICA_HOST:localhost}:${POSTGRES_REPLICA_PORT:5433}/${POSTGRES_REPLICA_DB:postgres}
       username: postgres
       password: postgres
       driver-class-name: org.postgresql.Driver
-platform:
-  database:
-    type: postgres
 
 ---
 spring:

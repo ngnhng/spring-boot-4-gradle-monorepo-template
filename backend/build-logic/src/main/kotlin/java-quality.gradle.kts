@@ -134,7 +134,7 @@ tasks.withType<JavaCompile>().configureEach {
     options.errorprone  {
         excludedPaths = ".*/build/generated/.*" // Exclude specific generated folders from ErrorProne explicitly if needed
         disableWarningsInGeneratedCode = true // Critical for Lombok/MapStruct support
-        disableAllChecks = true // Other error prone checks are disabled
+        disableAllChecks = true // Other error-prone checks are disabled
         option("NullAway:OnlyNullMarked", "true") // Enable nullness checks only in null-marked code
         error("NullAway") // bump checks from warnings (default) to errors
         option("NullAway:JSpecifyMode", "true") // https://github.com/uber/NullAway/wiki/JSpecify-Support

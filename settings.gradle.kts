@@ -32,6 +32,7 @@ dependencyResolutionManagement {
   val nexusAllowInsecure = (System.getenv("NEXUS_ALLOW_INSECURE") ?: "true").toBoolean()
 
   repositories {
+    mavenLocal()
     mavenCentral()
     maven {
       name = "Nexus"

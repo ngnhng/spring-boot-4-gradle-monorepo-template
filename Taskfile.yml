@@ -27,6 +27,11 @@ tasks:
     cmds:
       - "{{.GRADLE_CMD}} --rerun-tasks :{{.MAIN_MODULE}}:bootRun"
 
+  migrate:
+    desc: "Run Liquibase migrations manually"
+    cmds:
+      - '{{.GRADLE_CMD}} --rerun-tasks :{{.MAIN_MODULE}}:runLiquibaseMigration {{if .MIGRATE_PROFILES}}-PmigrateProfiles={{.MIGRATE_PROFILES}}{{end}}'
+
   test:
     desc: "Run Backend Tests"
     cmds:
