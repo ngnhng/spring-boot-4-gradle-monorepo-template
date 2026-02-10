@@ -33,7 +33,7 @@ backend/
 └── onboard-core/             # Shared domain primitives and cross-cutting logic
 ```
 
-#### Standard module structure (clear view)
+#### Standard module structure
 
 ```text
 <module-name>/
